@@ -5,9 +5,12 @@ import numpy as np
 import os
 
 app = Flask(__name__)
+
+# Load the trained model
 model = load_model('faceguard_model_improved.h5')
 class_names = ['acne', 'dryness', 'normal', 'pigmentation', 'rosacea']
 
+# Create uploads folder if not exists
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -24,18 +27,24 @@ def analyze_skin():
     image_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(image_path)
 
-    img = Image.open(image_path).convert('RGB')
-    img = img.resize((224, 224))
-    img_array = np.expand_dims(np.array(img) / 255.0, axis=0)
+    try:
+        img = Image.open(image_path).convert('RGB')
+        img = img.resize((224, 224))
+        img_array = np.expand_dims(np.array(img) / 255.0, axis=0)
 
-    prediction = model.predict(img_array)
-    class_index = np.argmax(prediction)
-    result = class_names[class_index]
+        prediction = model.predict(img_array)
+        class_index = np.argmax(prediction)
+        result = class_names[class_index]
 
-    return jsonify({
-        'predicted_class': result,
-        'confidence': float(np.max(prediction))
-    })
+        return jsonify({
+            'predicted_class': result,
+            'confidence': float(np.max(prediction))
+        })
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ⬇️ Required for Railway to assign correct port
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
