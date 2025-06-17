@@ -2,9 +2,9 @@ services:
   - type: web
     name: faceguard-api
     env: python
-    buildCommand: ""
-    startCommand: python app.py
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.12
